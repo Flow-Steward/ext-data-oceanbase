@@ -1,0 +1,6 @@
+{
+  "prebuilts": [
+    "oceanbase"
+  ],
+  "display_name": "OceanBase (Google MCP Toolbox)"
+}
