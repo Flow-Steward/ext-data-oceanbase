@@ -13,7 +13,7 @@ Create a project connection using these settings:
 | `database` | OceanBase database. Required. |
 | `user` | OceanBase user. Required. |
 
-Store the OceanBase user password in the connection secrets. Dataset advanced environment exposes only the named OCEANBASE_ source variables; password overrides remain in secrets. Writer connections use the explicit settings above.
+Store the OceanBase user password in the connection secrets. The pinned source requires a nonempty password; datasets may alternatively use their password environment secret. Dataset advanced environment exposes only the named OCEANBASE_ source variables; password overrides remain in secrets. Writer connections use the explicit settings above.
 
 Use an OceanBase MySQL-compatible endpoint and the user identity expected by that endpoint. This package does not offer an Oracle-mode interface.
 

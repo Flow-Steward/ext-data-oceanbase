@@ -127,6 +127,9 @@ runtime:
             type: string
             title: OceanBase password
             description: Password for the selected OceanBase user.
+            minLength: 1
+        required:
+        - password
       capabilities:
         write_queries: true
       safety_profile:
@@ -213,6 +216,7 @@ runtime:
             type: string
             title: OceanBase password
             description: Password for the selected OceanBase user.
+            minLength: 1
           env:
             type: object
             title: Advanced OceanBase secret environment
@@ -220,7 +224,17 @@ runtime:
             properties:
               OCEANBASE_PASSWORD:
                 type: string
+                minLength: 1
             description: Optional OceanBase password environment override.
+        anyOf:
+        - required:
+          - password
+        - required:
+          - env
+          properties:
+            env:
+              required:
+              - OCEANBASE_PASSWORD
       capabilities:
         read_only: true
         test_connection: true
