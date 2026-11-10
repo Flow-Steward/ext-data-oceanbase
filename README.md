@@ -1,6 +1,6 @@
 # OceanBase for Flow Steward
 
-Connect **OceanBase** datasets and run parameterized workflow writes. This repository contains one installable OceanBase extension, version **1.3.2**, with separate Linux AMD64 and ARM64 archives. No other database can be selected or installed from this package.
+Connect **OceanBase** datasets and run parameterized workflow writes. This repository contains one installable OceanBase extension, version **1.3.4**, with separate Linux AMD64 and ARM64 archives. No other database can be selected or installed from this package.
 
 ## Set up a OceanBase connection
 
@@ -33,7 +33,7 @@ The visible name is OceanBase. The legacy extension ID `flowsteward.data-connect
 
 ## Technical implementation and packaging
 
-Google MCP Toolbox is implementation tooling, pinned to tag `v1.16.0`, commit `06ea49d9a487a72c22419b5a8d5c22c11f0d7485`. Its fixed native build registers only this repository's OceanBase interfaces. Installation and runtime download no drivers. Native binaries are rebuilt with Go 1.27.3 and the reviewed module baseline; toolbox-provenance.json records exact patches, dependencies and binary digests.
+Google MCP Toolbox is implementation tooling, pinned to tag `v1.16.0`, commit `06ea49d9a487a72c22419b5a8d5c22c11f0d7485`. Its fixed native build registers only this repository's OceanBase interfaces. Installation and runtime download no drivers. Native binaries are rebuilt with Go 1.27.4 and the reviewed module baseline; toolbox-provenance.json records exact patches, dependencies and binary digests.
 
 To package the existing verified binaries:
 
