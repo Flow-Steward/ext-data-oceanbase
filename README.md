@@ -1,6 +1,14 @@
 # OceanBase for Flow Steward
 
-Connect **OceanBase** datasets and run parameterized workflow writes. This repository contains one installable OceanBase extension, version **1.3.4**, with separate Linux AMD64 and ARM64 archives. No other database can be selected or installed from this package.
+Connect OceanBase to Flow Steward for reusable Dataset queries and workflow-driven data changes over its MySQL-compatible interface. The Dataset connector tests access, inspects typed table schemas, validates saved SQL against selected resources, previews results, runs saved queries and infers their output schema. Use application lookups and reporting extracts to supply data to subsequent workflow steps while keeping Dataset queries read-only.
+
+A separate workflow action runs one INSERT, UPDATE or DELETE with named parameters and an optional parameter schema. Use it to save workflow output or change existing application records in the configured OceanBase database, subject to the server's SQL support and the database user's permissions. Parameter values are supplied separately from SQL, allowing reusable statements to accept different workflow inputs.
+
+Configure the host, port, database and user and store a nonempty password in secrets. This package targets OceanBase's MySQL-compatible endpoint and does not provide an Oracle-mode interface. Reads return at most 100 rows and 480 KiB. SQL support is a restricted subset; schema administration, transaction scripts and database triggers are outside the connector's operation set.
+
+## Runtime and operation requirements
+
+Connect **OceanBase** datasets and run parameterized workflow writes. This repository contains one installable OceanBase extension, version **1.3.5**, with separate Linux AMD64 and ARM64 archives. No other database can be selected or installed from this package.
 
 ## Set up a OceanBase connection
 
