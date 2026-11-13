@@ -1,3 +1,0 @@
-github.com/googleapis/mcp-toolbox/internal/sources/oceanbase
-github.com/googleapis/mcp-toolbox/internal/tools/oceanbase/oceanbaseexecutesql
-github.com/googleapis/mcp-toolbox/internal/tools/oceanbase/oceanbasesql
