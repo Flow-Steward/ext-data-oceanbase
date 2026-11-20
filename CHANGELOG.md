@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.14
+
+- Bound Dataset query execution on OceanBase and restrict complex joins.
+
 ## 1.3.13
 
 - Strengthen saved Dataset query validation against selected tables and columns. Schema discovery now lists tables in the configured database.

@@ -309,7 +309,8 @@ def test_dataset_read_preserves_bound_sql_for_the_saved_resource(guarded_runtime
 
     assert guarded_runtime._execute_sql(request, preview=True)["rows"] == [{"event_id": 5}]
     assert calls[0]["sql"] == (
-        "SELECT CAST(event_id AS SIGNED) AS display_id FROM Events "
+        "SELECT /*+ QUERY_TIMEOUT(5000000) PARALLEL(1) MAX_CONCURRENT(1) */ "
+        "CAST(event_id AS SIGNED) AS display_id FROM Events "
         "WHERE event_id = ? ORDER BY 1 LIMIT 10"
     )
     assert calls[0]["param_order"] == ["id"]
@@ -331,3 +332,12 @@ def test_legacy_scope_keeps_duplicate_table_identity_ambiguous(guarded_runtime):
         "Events": None,
         "Customers": "Reporting",
     }
+
+
+def test_dataset_resource_budget_counts_distinct_resolved_sources(guarded_runtime):
+    validate = guarded_runtime._validate_read_source_budget
+    validate([("reporting", "events"), ("reporting", "customers")])
+    with pytest.raises(ValueError, match="repeat"):
+        validate([("reporting", "events"), ("reporting", "events")])
+    with pytest.raises(ValueError, match="at most"):
+        validate([("reporting", f"resource_{index}") for index in range(4)])

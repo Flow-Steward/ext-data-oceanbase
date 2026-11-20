@@ -116,6 +116,7 @@ class Select(NamedTuple):
     sources: list[Source]
     columns: list[Column]
     sql: str
+    has_unconditional_join: bool
 
 
 def _quoted_end(sql: str, start: int) -> int:
@@ -203,6 +204,7 @@ class _SelectParser:
         self.output_aliases: dict[str, tuple[str, int] | None] = {}
         self.order_positions: list[tuple[int, int, int]] = []
         self.has_projection_wildcard = False
+        self.has_unconditional_join = False
         self.depth = 0
 
     @property
@@ -259,12 +261,16 @@ class _SelectParser:
 
     def _join(self) -> bool:
         if self._take(","):
+            self.has_unconditional_join = True
             self._source()
             return True
         if self._take("left") or self._take("right"):
             self._take("outer")
             self._expect("join")
-        elif self._take("inner") or self._take("cross"):
+        elif self._take("cross"):
+            self.has_unconditional_join = True
+            self._expect("join")
+        elif self._take("inner"):
             self._expect("join")
         elif not self._take("join"):
             return False
@@ -277,6 +283,8 @@ class _SelectParser:
             while self._take(","):
                 self.columns.append(Column((self._identifier(),), using=True))
             self._expect(")")
+        else:
+            self.has_unconditional_join = True
         return True
 
     def _call(self, function: str) -> None:
@@ -477,7 +485,9 @@ class _SelectParser:
         self._take(";")
         if self.token.kind != "end":
             raise ValueError(_UNSUPPORTED)
-        return Select(self.sources, self.columns, self._rewritten_sql())
+        return Select(
+            self.sources, self.columns, self._rewritten_sql(), self.has_unconditional_join
+        )
 
     def _integer(self) -> None:
         if (

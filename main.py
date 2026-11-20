@@ -435,7 +435,7 @@ def _invoke_toolbox(
                 "params": {
                     "protocolVersion": "2025-06-18",
                     "capabilities": {},
-                    "clientInfo": {"name": EXTENSION_ID, "version": "1.3.13"},
+                    "clientInfo": {"name": EXTENSION_ID, "version": "1.3.14"},
                 },
             },
         )
@@ -987,6 +987,18 @@ def _template_sql(definition: dict[str, Any], *, require_predicate: bool = True)
     return normalized_sql
 
 
+_MAX_DATASET_SOURCES = 3
+_MAX_DATASET_SERVER_SECONDS = 5
+_MAX_DATASET_ADAPTER_SECONDS = 10
+
+
+def _validate_read_source_budget(sources: list[tuple[str | None, str]]) -> None:
+    if len(sources) > _MAX_DATASET_SOURCES:
+        raise ValueError(f"Dataset reads may use at most {_MAX_DATASET_SOURCES} table sources")
+    if len(sources) != len(set(sources)):
+        raise ValueError("Dataset reads cannot repeat a table source")
+
+
 def _validate_query_scope(
     sql: str,
     allowed: dict[str, set[str] | None],
@@ -998,6 +1010,7 @@ def _validate_query_scope(
         raise ValueError("Dataset resource scope is empty")
     query = parse_select(sql, _READ_ONLY_FUNCTIONS)
     resources: list[str] = []
+    source_identities: list[tuple[str | None, str]] = []
     outside: set[str] = set()
     for source in query.sources:
         name = source.name[-1]
@@ -1010,11 +1023,16 @@ def _validate_query_scope(
         if name not in allowed or source_database != granted_database:
             outside.add(".".join(source.name))
         resources.append(name)
+        source_identities.append((source_database, name))
     if outside:
         raise ValueError(
             "Query references resources outside dataset scope: "
             f"{sorted(outside)}. Allowed resources: {sorted(allowed)}"
         )
+
+    _validate_read_source_budget(source_identities)
+    if query.has_unconditional_join:
+        raise ValueError("Dataset reads require explicit join conditions")
 
     bindings: dict[tuple[str, ...], str] = {}
     for source in query.sources:
@@ -1341,14 +1359,27 @@ def _execute_sql(request: dict[str, Any], *, preview: bool) -> dict[str, Any]:
         default=10 if preview else 100,
         maximum=100,
     )
+    timeout_seconds = _limit(
+        request,
+        key="timeout_seconds",
+        default=_MAX_DATASET_ADAPTER_SECONDS,
+        maximum=_MAX_DATASET_ADAPTER_SECONDS,
+    )
+    server_timeout = min(timeout_seconds, _MAX_DATASET_SERVER_SECONDS) * 1_000_000
     limited_sql = _limited_sql(prebuilt, sql, limit)
+    # The saved SQL's comments were stripped before validation. Set the deadline
+    # on the statement after validation so it applies to server work, not just IPC.
+    limited_sql = (
+        f"{limited_sql[:6]} /*+ QUERY_TIMEOUT({server_timeout}) PARALLEL(1) MAX_CONCURRENT(1) */"
+        f"{limited_sql[6:]}"
+    )
     bound_query = _compile_bound_query(prebuilt, limited_sql, params)
     rows_raw = _invoke_toolbox(
         config,
         _secret_refs(request),
         "execute_sql",
         bound_query,
-        timeout_seconds=_limit(request, key="timeout_seconds", default=30, maximum=120),
+        timeout_seconds=timeout_seconds,
     )
     rows = [
         _normalize_toolbox_value(dict(row))
